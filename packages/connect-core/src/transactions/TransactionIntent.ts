@@ -85,32 +85,37 @@ export default class TransactionIntent {
       this.functionName,
       this.functionArgs,
       apps,
-      this.#provider
+      this.#provider,
+      options && options.as ? options.as : undefined,
     )
 
-    for (let i = 0; i < paths.length; i++) {
-      const describedPath = await describeTransactionPath(
-        paths[i].path,
-        apps,
-        this.#provider
-      )
+    if (paths.length > 0) {
+      for (let i = 0; i < paths.length; i++) {
+        const describedPath = await describeTransactionPath(
+          paths[i].path,
+          apps,
+          this.#provider
+        )
 
-      transactionPaths.push(
-        new TransactionPath({
-          apps: apps.filter(app =>
-            paths[i].path
-              .map(transaction => transaction.to)
-              .some(address => address === app.address)
-          ),
-          destination: apps.find(app => app.address == this.contractAddress)!,
-          forwardingFeePretransaction: paths[i].forwardingFeePretransaction,
-          transactions: describedPath,
-        })
-      )
+        transactionPaths.push(
+          new TransactionPath({
+            apps: apps.filter(app =>
+              paths[i].path
+                .map(transaction => transaction.to)
+                .some(address => address === app.address)
+            ),
+            destination: apps.find(app => app.address == this.contractAddress)!,
+            forwardingFeePretransaction: paths[i].forwardingFeePretransaction,
+            transactions: describedPath,
+          })
+        )
 
-      if (i === paths.length - 1) {
-        return transactionPaths;
+        if (i === paths.length - 1) {
+          return transactionPaths;
+        }
       }
+    } else {
+      return transactionPaths;
     }
   }
 

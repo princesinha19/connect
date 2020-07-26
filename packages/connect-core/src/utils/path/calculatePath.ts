@@ -322,20 +322,15 @@ async function calculateForwardingPaths(
         )
         // If that happens, we give up as we should've been able to perform the action with this
         // forwarder
-        return [{
+        paths.push({
           forwardingFeePretransaction,
           path: [transaction, directTransaction],
-        }]
+        });
       } catch (err) {
         return [{ path: [] }]
       }
     }
   }
-
-  // Get a list of all forwarders (excluding the forwarders with direct permission)
-  const filterForwarders = forwarders.filter(
-    forwarder => !includesAddress(forwardersWithPermission, forwarder)
-  )
 
   // Set up the path finding queue
   // The queue takes the form of Array<[Array<EthereumTransaction>, Array<String>]>
@@ -352,7 +347,7 @@ async function calculateForwardingPaths(
         ),
         directTransaction,
       ],
-      filterForwarders,
+      forwarders,
     ]
   })
 
@@ -394,19 +389,6 @@ async function calculateForwardingPaths(
             forwardingFeePretransaction,
             path: [transaction, directTransaction],
           });
-
-          // For checking all posibilty with each forwarders
-          queue.push([
-            [createForwarderTransaction(forwarder, script), ...path],
-
-            forwarders.filter((nextForwarder) => {
-                if (nextForwarder === forwarder || nextForwarder === previousForwarder)
-                    return false;
-
-                return true;
-            }),
-        ]);
-
         } catch (err) {
           return [{ path: [] }]
         }
