@@ -494,7 +494,10 @@ export async function calculateTransactionPaths(
       role => role.name === method.roles[0]
     )
     const allowedEntities =
-      role?.permissions?.map(permission => permission.granteeAddress) || []
+      role?.permissions?.map(permission => {
+        if (permission.allowed)
+          return permission.granteeAddress;
+      }) || [];
 
     // No one has access, so of course we don't as well
     if (allowedEntities.length === 0) {
@@ -503,8 +506,8 @@ export async function calculateTransactionPaths(
 
     // User may have permission; attempt direct transaction
     if (
-      includesAddress(allowedEntities, sender) ||
-      includesAddress(allowedEntities, ANY_ENTITY)
+      includesAddress(allowedEntities as string[], sender) ||
+      includesAddress(allowedEntities as string[], ANY_ENTITY)
     ) {
       try {
         return [{ path: [directTransaction] }]
@@ -517,7 +520,7 @@ export async function calculateTransactionPaths(
 
     // Find forwarders with permission to perform the action
     forwardersWithPermission = forwarders.filter(forwarder =>
-      includesAddress(allowedEntities, forwarder)
+      includesAddress(allowedEntities as string[], forwarder)
     )
   }
 
